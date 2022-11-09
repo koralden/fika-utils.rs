@@ -7,15 +7,15 @@ use tokio::fs;
 use tokio::process::Command;
 use tokio::signal;
 use tracing::{debug, instrument, warn};
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+//use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use atty::Stream;
 use chrono::prelude::*;
 use colored_json::to_colored_json_auto;
 
 use crate::aws_iot::{mqtt_provision_task, AwsIotKeyCertificate};
-use crate::kap_daemon::{KBossConfig, KNetworkConfig, KPorConfig};
 use crate::kap_daemon::KCoreConfig;
-use crate::rule_config_load;
+use crate::kap_daemon::{KBossConfig, KNetworkConfig, KPorConfig};
+use crate::{rule_config_load, setup_logging};
 
 //type DbConnection = redis::aio::Connection;
 
@@ -289,8 +289,7 @@ async fn iot_fleet_provision(
     config_path: &str,
     force: bool,
 ) -> Result<ActivateCertificate> {
-    let (rule, cfg) = rule_config_load(rule_path, Some(config_path))
-        .await?;
+    let (rule, cfg) = rule_config_load(rule_path, Some(config_path)).await?;
 
     let cert = if rule.aws.dedicated.config_verify().await.is_ok() && force == false {
         debug!("MQTT provision use original one");
@@ -345,23 +344,9 @@ async fn main_task(opt: ActivateOpt) -> Result<()> {
     Ok(())
 }
 
-//pub type MyError = Box<dyn std::error::Error + Send + Sync>;
-fn set_up_logging(log_level: &str) -> Result<()> {
-    // See https://docs.rs/tracing for more info
-    tracing_subscriber::registry()
-        .with(tracing_subscriber::EnvFilter::new(
-            std::env::var("RUST_LOG").unwrap_or_else(move |_| {
-                format!("{},redis={},mio={}", log_level, log_level, log_level).into()
-            }),
-        ))
-        .with(tracing_subscriber::fmt::layer())
-        .init();
-    Ok(())
-}
-
 //#[tokio::main]
 pub async fn activate(opt: ActivateOpt) -> Result<()> {
-    set_up_logging(&opt.log_level)?;
+    setup_logging(&opt.log_level)?;
     debug!("activate-rule path as {}", opt.active);
 
     let main_jhandle = tokio::spawn(main_task(opt));

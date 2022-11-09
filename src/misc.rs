@@ -2,12 +2,14 @@ use anyhow::Result;
 use clap::{Args, Subcommand};
 use serde_json::Value;
 use tracing::{debug, instrument};
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+//use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[cfg(feature = "wallet")]
 use ethers::prelude::*;
 
 use chrono::prelude::*;
+
+use crate::setup_logging;
 
 #[derive(Args, Debug)]
 struct ApWalletOpt {
@@ -83,23 +85,9 @@ pub async fn wallet_tools(w: WalletCommand) -> Result<()> {
     Ok(())
 }
 
-//pub type MyError = Box<dyn std::error::Error + Send + Sync>;
-fn set_up_logging(log_level: &str) -> Result<() /*, MyError*/> {
-    // See https://docs.rs/tracing for more info
-    tracing_subscriber::registry()
-        .with(tracing_subscriber::EnvFilter::new(
-            std::env::var("RUST_LOG").unwrap_or_else(move |_| {
-                format!("{},redis={},mio={}", log_level, log_level, log_level).into()
-            }),
-        ))
-        .with(tracing_subscriber::fmt::layer())
-        .init();
-    Ok(())
-}
-
 //#[tokio::main]
 pub async fn time_tools(opt: TimeToolOpt) -> Result<()> {
-    set_up_logging(&opt.log_level)?;
+    setup_logging(&opt.log_level)?;
 
     match opt.commands {
         TimeToolCommand::Timestamp(t) => {

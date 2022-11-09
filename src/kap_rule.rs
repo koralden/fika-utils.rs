@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use tokio::fs;
 use tokio::time::Duration;
-use {std::iter::repeat_with, fastrand};
+use {fastrand, std::iter::repeat_with};
 
 use crate::aws_iot::{RuleAwsIotDedicatedConfig, RuleAwsIotProvisionConfig};
 use crate::RuleConfigTask;
@@ -199,8 +199,7 @@ impl RuleAwsIotConfig {
                 "Fake"
             };
 
-            format!("{}_{}", prefix, postfix.to_lowercase()
-                    .replace(":", ""))
+            format!("{}_{}", prefix, postfix.to_lowercase().replace(":", ""))
         };
         Ok(thing)
     }
@@ -215,10 +214,12 @@ impl Default for RuleAwsIotConfig {
         Self {
             endpoint: Some("a2dl0okey4lms3-ats.iot.ap-northeast-1.amazonaws.com".to_string()),
             port: Some(8883),
-            root_url: Some("https://i76cqmiru3.execute-api.ap-northeast-1.amazonaws.com".to_string()),
+            root_url: Some(
+                "https://i76cqmiru3.execute-api.ap-northeast-1.amazonaws.com".to_string(),
+            ),
             auth_token: Some("58280063f827ce322eaa37664ba5bf24".to_string()),
             device_path: Some("prod/api/v1/devices".to_string()),
-            
+
             provision: None,
             dedicated: RuleAwsIotDedicatedConfig::default(),
         }

@@ -1,12 +1,12 @@
-use anyhow::{anyhow, Result};
-use tokio::sync::{/*broadcast, Notify,*/ mpsc, oneshot};
-use tracing::{debug, instrument};
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use crate::kap_daemon::KdaemonConfig;
 use crate::kap_rule::RuleConfig;
-use std::path::PathBuf;
-use tokio::time::Duration;
+use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
+use tokio::sync::{/*broadcast, Notify,*/ mpsc, oneshot};
+use tokio::time::Duration;
+use tracing::{debug, instrument};
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 pub mod activate;
 pub mod aws_iot;
@@ -14,16 +14,14 @@ pub mod kap_daemon;
 pub use self::activate::{activate, ActivateOpt};
 pub mod misc;
 pub mod web_api;
-pub use self::web_api::{
-    aws_web_cli, WebAwsOpt,
-    boss_web_cli, WebBossOpt,
-    curl_web_cli, CurlMethod,
-};
 #[cfg(feature = "boss-api")]
 //pub use self::misc::{boss_tools, WebBossOpt};
 pub use self::misc::{time_tools, TimeToolOpt};
 #[cfg(feature = "ethers")]
 pub use self::misc::{wallet_tools, WalletCommand};
+pub use self::web_api::{
+    aws_web_cli, boss_web_cli, curl_web_cli, CurlMethod, WebAwsOpt, WebBossOpt,
+};
 pub mod kap_rule;
 
 #[derive(Debug)]
@@ -153,9 +151,11 @@ pub fn setup_logging(log_level: &str) -> Result<()> {
 }
 
 pub async fn rule_config_load(
-    rule_path: &str, cfg_path: Option<&str>
-    ) -> Result<(RuleConfig, KdaemonConfig)> {
-    let rule = RuleConfig::build_from(rule_path).await
+    rule_path: &str,
+    cfg_path: Option<&str>,
+) -> Result<(RuleConfig, KdaemonConfig)> {
+    let rule = RuleConfig::build_from(rule_path)
+        .await
         .map_err(|e| anyhow!("rule build from {} fail - {:?}", rule_path, e))?;
 
     let cfg_path = if let Some(path) = cfg_path {
@@ -163,9 +163,9 @@ pub async fn rule_config_load(
     } else {
         &rule.core.config
     };
-    let cfg = KdaemonConfig::build_from(cfg_path).await
-        .map_err(|e| anyhow!("cfg build from {} fail - {:?}",
-                             cfg_path, e))?;
+    let cfg = KdaemonConfig::build_from(cfg_path)
+        .await
+        .map_err(|e| anyhow!("cfg build from {} fail - {:?}", cfg_path, e))?;
 
     Ok((rule, cfg))
 }

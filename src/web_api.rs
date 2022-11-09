@@ -1,16 +1,16 @@
 use anyhow::{anyhow, Result};
+use chrono::prelude::*;
 use clap::{Args, Subcommand};
-use serde_json::{json, Value};
-use std::collections::HashMap;
-use tracing::error;
 use colored_json::to_colored_json_auto;
 use serde::{Deserialize, Serialize};
-use chrono::prelude::*;
+use serde_json::{json, Value};
+use std::collections::HashMap;
 use std::str::FromStr;
 use thiserror::Error;
+use tracing::error;
 
-use crate::setup_logging;
 use crate::rule_config_load;
+use crate::setup_logging;
 
 #[derive(Error, Debug)]
 pub enum CurlError {
@@ -26,7 +26,7 @@ pub struct CurlKV {
 
 impl FromStr for CurlKV {
     type Err = CurlError;
-    
+
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if let Some((k, v)) = s.split_once(':') {
             Ok(Self {
@@ -141,7 +141,7 @@ async fn curl_web_api(method: CurlMethod) -> Result<CurlResponse> {
                 .await
                 .map(|r| CurlResponse::TextFmt(r))
                 .map_err(|e| anyhow!("{:?}", e))
-        },
+        }
         CurlMethod::GetJson(args) => {
             let mut req = client.get(&format!("{}", &args.url));
 
@@ -167,11 +167,14 @@ async fn curl_web_api(method: CurlMethod) -> Result<CurlResponse> {
                 req.json(&js)
             } else {
                 req
-            }.send().await?
-            .json::<Value>().await
-                .map(|r| CurlResponse::JsonFmt(r))
-                .map_err(|e| anyhow!("{:?}", e))
-        },
+            }
+            .send()
+            .await?
+            .json::<Value>()
+            .await
+            .map(|r| CurlResponse::JsonFmt(r))
+            .map_err(|e| anyhow!("{:?}", e))
+        }
         CurlMethod::Post(args) => {
             let mut req = client.post(&format!("{}", &args.url));
 
@@ -209,7 +212,7 @@ async fn curl_web_api(method: CurlMethod) -> Result<CurlResponse> {
                 .await
                 .map(|r| CurlResponse::TextFmt(r))
                 .map_err(|e| anyhow!("{:?}", e))
-        },
+        }
         CurlMethod::PostJson(args) => {
             let mut req = client.post(&format!("{}", &args.url));
 
@@ -235,11 +238,14 @@ async fn curl_web_api(method: CurlMethod) -> Result<CurlResponse> {
                 req.json(&js)
             } else {
                 req
-            }.send().await?
-            .json::<Value>().await
-                .map(|r| CurlResponse::JsonFmt(r))
-                .map_err(|e| anyhow!("{:?}", e))
-        },
+            }
+            .send()
+            .await?
+            .json::<Value>()
+            .await
+            .map(|r| CurlResponse::JsonFmt(r))
+            .map_err(|e| anyhow!("{:?}", e))
+        }
     }
 }
 
@@ -311,7 +317,11 @@ pub struct WebBossOpt {
     #[clap(subcommand)]
     class: WebBossPath,
 
-    #[clap(short = 'r', long = "rule", default_value = "/etc/fika_manager/rule.toml")]
+    #[clap(
+        short = 'r',
+        long = "rule",
+        default_value = "/etc/fika_manager/rule.toml"
+    )]
     rule: String,
 
     #[clap(short = 'u', long = "root-url")]
@@ -345,26 +355,30 @@ pub async fn boss_web_api(
             };
 
             match curl_web_api(CurlMethod::GetJson(CurlGetJsonArgs {
-                header: Some(vec!(CurlKV {
+                header: Some(vec![CurlKV {
                     key: "ACCESSTOKEN".to_string(),
                     value: region,
-                })),
-                query: Some(vec!(CurlKV {
+                }]),
+                query: Some(vec![CurlKV {
                     key: "ap_wallet".to_string(),
                     value: wallet,
-                })),
+                }]),
                 json: None,
                 url: format!("{}/{}", root_url, &arg.path),
-            })).await? {
+            }))
+            .await?
+            {
                 CurlResponse::JsonFmt(response) => {
                     if response["code"] == 200 {
                         Ok(response)
                     } else {
-                        Err(anyhow::anyhow!("{} [{}]",
-                                            response["message"],
-                                            response["code"]))
+                        Err(anyhow::anyhow!(
+                            "{} [{}]",
+                            response["message"],
+                            response["code"]
+                        ))
                     }
-                },
+                }
                 CurlResponse::TextFmt(s) => Err(anyhow::anyhow!("text format - {s}")),
             }
         }
@@ -381,30 +395,36 @@ pub async fn boss_web_api(
             };
 
             match curl_web_api(CurlMethod::PostJson(CurlPostJsonArgs {
-                header: Some(vec!(CurlKV {
-                    key: "ACCESSTOKEN".to_string(),
-                    value: region,
-                },
-                CurlKV {
-                    key: "ACCESSTOKEN-AP".to_string(),
-                    value: token.unwrap(),
-                })),
-                query: Some(vec!(CurlKV {
+                header: Some(vec![
+                    CurlKV {
+                        key: "ACCESSTOKEN".to_string(),
+                        value: region,
+                    },
+                    CurlKV {
+                        key: "ACCESSTOKEN-AP".to_string(),
+                        value: token.unwrap(),
+                    },
+                ]),
+                query: Some(vec![CurlKV {
                     key: "ap_wallet".to_string(),
                     value: wallet,
-                })),
+                }]),
                 json: Some(map.json),
                 url: format!("{}/{}", root_url, &map.path),
-            })).await? {
+            }))
+            .await?
+            {
                 CurlResponse::JsonFmt(response) => {
                     if response["code"] == 200 {
                         Ok(response["data"].clone())
                     } else {
-                        Err(anyhow::anyhow!("{} [{}]",
-                                            response["message"],
-                                            response["code"]))
+                        Err(anyhow::anyhow!(
+                            "{} [{}]",
+                            response["message"],
+                            response["code"]
+                        ))
                     }
-                },
+                }
                 CurlResponse::TextFmt(s) => Err(anyhow::anyhow!("text format - {s}")),
             }
         }
@@ -421,30 +441,36 @@ pub async fn boss_web_api(
             };
 
             match curl_web_api(CurlMethod::GetJson(CurlGetJsonArgs {
-                header: Some(vec!(CurlKV {
-                    key: "ACCESSTOKEN".to_string(),
-                    value: region,
-                },
-                CurlKV {
-                    key: "ACCESSTOKEN-AP".to_string(),
-                    value: token.unwrap(),
-                })),
-                query: Some(vec!(CurlKV {
+                header: Some(vec![
+                    CurlKV {
+                        key: "ACCESSTOKEN".to_string(),
+                        value: region,
+                    },
+                    CurlKV {
+                        key: "ACCESSTOKEN-AP".to_string(),
+                        value: token.unwrap(),
+                    },
+                ]),
+                query: Some(vec![CurlKV {
                     key: "ap_wallet".to_string(),
                     value: wallet,
-                })),
+                }]),
                 json: None,
                 url: format!("{}/{}", root_url, &arg.path),
-            })).await? {
+            }))
+            .await?
+            {
                 CurlResponse::JsonFmt(response) => {
                     if response["code"] == 200 {
                         Ok(response)
                     } else {
-                        Err(anyhow::anyhow!("{} [{}]",
-                                response["message"],
-                                response["code"]))
+                        Err(anyhow::anyhow!(
+                            "{} [{}]",
+                            response["message"],
+                            response["code"]
+                        ))
                     }
-                },
+                }
                 CurlResponse::TextFmt(s) => Err(anyhow::anyhow!("text format - {s}")),
             }
         }
@@ -461,30 +487,36 @@ pub async fn boss_web_api(
             };
 
             match curl_web_api(CurlMethod::GetJson(CurlGetJsonArgs {
-                header: Some(vec!(CurlKV {
-                    key: "ACCESSTOKEN".to_string(),
-                    value: region,
-                },
-                CurlKV {
-                    key: "ACCESSTOKEN-AP".to_string(),
-                    value: token.unwrap(),
-                })),
-                query: Some(vec!(CurlKV {
+                header: Some(vec![
+                    CurlKV {
+                        key: "ACCESSTOKEN".to_string(),
+                        value: region,
+                    },
+                    CurlKV {
+                        key: "ACCESSTOKEN-AP".to_string(),
+                        value: token.unwrap(),
+                    },
+                ]),
+                query: Some(vec![CurlKV {
                     key: "ap_wallet".to_string(),
                     value: wallet,
-                })),
+                }]),
                 json: None,
                 url: format!("{}/{}", root_url, &arg.path),
-            })).await? {
+            }))
+            .await?
+            {
                 CurlResponse::JsonFmt(response) => {
                     if response["code"] == 200 {
                         Ok(response["hcs"].clone())
                     } else {
-                        return Err(anyhow::anyhow!("{} [{}]",
-                                response["message"],
-                                response["code"]));
+                        return Err(anyhow::anyhow!(
+                            "{} [{}]",
+                            response["message"],
+                            response["code"]
+                        ));
                     }
-                },
+                }
                 CurlResponse::TextFmt(s) => return Err(anyhow::anyhow!("text format - {s}")),
             }
         }
@@ -503,51 +535,59 @@ pub async fn boss_web_api(
             };
 
             match curl_web_api(CurlMethod::GetJson(CurlGetJsonArgs {
-                header: Some(vec!(CurlKV {
-                    key: "ACCESSTOKEN".to_string(),
-                    value: region,
-                },
-                CurlKV {
-                    key: "ACCESSTOKEN-AP".to_string(),
-                    value: token.unwrap(),
-                })),
+                header: Some(vec![
+                    CurlKV {
+                        key: "ACCESSTOKEN".to_string(),
+                        value: region,
+                    },
+                    CurlKV {
+                        key: "ACCESSTOKEN-AP".to_string(),
+                        value: token.unwrap(),
+                    },
+                ]),
                 query: None,
-                json: Some(json!({
-                    "ap_wallet": wallet
-                })),
+                json: Some(json!({ "ap_wallet": wallet })),
                 url: format!("{}/{}", root_url, &path),
-            })).await? {
+            }))
+            .await?
+            {
                 CurlResponse::JsonFmt(response) => {
                     if response["code"] == 200 {
                         Ok(response["data"].clone())
                     } else {
-                        Err(anyhow::anyhow!("{} [{}]",
-                                            response["message"],
-                                            response["code"]))
+                        Err(anyhow::anyhow!(
+                            "{} [{}]",
+                            response["message"],
+                            response["code"]
+                        ))
                     }
-                },
+                }
                 CurlResponse::TextFmt(s) => Err(anyhow::anyhow!("text format - {s}")),
             }
         }
         WebBossPath::GetApWallet(map) => {
             match curl_web_api(CurlMethod::GetJson(CurlGetJsonArgs {
-                header: Some(vec!(CurlKV {
+                header: Some(vec![CurlKV {
                     key: "ACCESSTOKEN".to_string(),
                     value: region,
-                })),
+                }]),
                 query: None,
                 json: Some(map.json),
                 url: format!("{}/{}", root_url, &map.path),
-            })).await? {
+            }))
+            .await?
+            {
                 CurlResponse::JsonFmt(response) => {
                     if response["code"] == 200 {
                         Ok(response["data"].clone())
                     } else {
-                        Err(anyhow::anyhow!("{} [{}]",
-                                            response["message"],
-                                            response["code"]))
+                        Err(anyhow::anyhow!(
+                            "{} [{}]",
+                            response["message"],
+                            response["code"]
+                        ))
                     }
-                },
+                }
                 CurlResponse::TextFmt(s) => Err(anyhow::anyhow!("text format - {s}")),
             }
         }
@@ -591,7 +631,6 @@ pub async fn boss_web_cli(opt: WebBossOpt) -> Result<()> {
     Ok(())
 }
 
-
 #[derive(Args, Debug)]
 pub struct DeviceArgs {
     #[clap(long = "online")]
@@ -599,7 +638,11 @@ pub struct DeviceArgs {
 
     wallet: Option<String>,
 
-    #[clap(short = 'd', long = "devic-path", default_value = "prod/api/v1/devices")]
+    #[clap(
+        short = 'd',
+        long = "devic-path",
+        default_value = "prod/api/v1/devices"
+    )]
     device_path: String,
 }
 
@@ -617,14 +660,21 @@ pub struct WebAwsOpt {
 
     /*#[clap(short = 'r', long = "rule", default_value = "/etc/fika_manager/rule.toml")]
     rule: String,*/
-
     #[clap(long = "log-level", default_value = "info")]
     log_level: String,
 
-    #[clap(short = 'u', long = "root-url", default_value = "https://i76cqmiru3.execute-api.ap-northeast-1.amazonaws.com")]
+    #[clap(
+        short = 'u',
+        long = "root-url",
+        default_value = "https://i76cqmiru3.execute-api.ap-northeast-1.amazonaws.com"
+    )]
     root_url: String,
 
-    #[clap(short = 'a', long = "auth-token", default_value = "58280063f827ce322eaa37664ba5bf24")]
+    #[clap(
+        short = 'a',
+        long = "auth-token",
+        default_value = "58280063f827ce322eaa37664ba5bf24"
+    )]
     auth_token: String,
 }
 
@@ -636,52 +686,54 @@ struct AwsDeviceEntry {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct AwsDeviceList{
-      data: Vec<AwsDeviceEntry>,
+struct AwsDeviceList {
+    data: Vec<AwsDeviceEntry>,
 }
 
-pub async fn aws_web_api(
-    root_url: &str,
-    auth_token: &str,
-    class: WebAwsPath
-) -> Result<()> {
+pub async fn aws_web_api(root_url: &str, auth_token: &str, class: WebAwsPath) -> Result<()> {
     match class {
         WebAwsPath::GetDevice(state) => {
             match curl_web_api(CurlMethod::GetJson(CurlGetJsonArgs {
-                header: Some(vec!(CurlKV {
+                header: Some(vec![CurlKV {
                     key: "authorizationToken".to_string(),
                     value: auth_token.to_string(),
-                })),
+                }]),
                 query: if state.online {
-                    Some(vec!(CurlKV {
+                    Some(vec![CurlKV {
                         key: "state".to_string(),
                         value: "online".to_string(),
-                    }))
+                    }])
                 } else {
                     None
                 },
                 json: None,
                 url: format!("{}/{}", root_url, &state.device_path),
-            })).await? {
+            }))
+            .await?
+            {
                 CurlResponse::JsonFmt(response) => {
                     let response: AwsDeviceList = serde_json::from_value(response).unwrap();
                     let show = if let Some(ref wallet) = state.wallet {
-                        let got = response.data.iter()
-                            .filter(|i| if let Some(ref w) = i.device {
-                                w == wallet
-                            } else {
-                                false
+                        let got = response
+                            .data
+                            .iter()
+                            .filter(|i| {
+                                if let Some(ref w) = i.device {
+                                    w == wallet
+                                } else {
+                                    false
+                                }
                             })
-                        .collect::<Vec<&AwsDeviceEntry>>();
+                            .collect::<Vec<&AwsDeviceEntry>>();
                         serde_json::to_value(&got)?
                     } else {
                         serde_json::to_value(&response.data)?
                     };
                     println!("{}", to_colored_json_auto(&show)?);
-                },
+                }
                 CurlResponse::TextFmt(s) => return Err(anyhow::anyhow!("text format - {s}")),
             }
-        },
+        }
     }
 
     Ok(())
@@ -694,8 +746,7 @@ pub async fn aws_web_cli(opt: WebAwsOpt) -> Result<()> {
 }
 
 pub fn web_full_url(url: &str, path: &str, query: &Vec<(&str, &str)>) -> Result<String> {
-    let url = reqwest::Url::parse_with_params(&format!("{}/{}", url, path),
-        query)?;
+    let url = reqwest::Url::parse_with_params(&format!("{}/{}", url, path), query)?;
 
     Ok(url.into())
 }

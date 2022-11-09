@@ -18,8 +18,8 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::time::{self, Duration};
 use tracing::{debug, error, info, instrument, warn};
 
-use crate::SubscribeCmd;
 use crate::kap_rule::RuleAwsIotConfig;
+use crate::SubscribeCmd;
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 #[allow(dead_code)]
@@ -67,30 +67,35 @@ impl Default for RuleAwsIotDedicatedConfig {
             cert: "/userdata/production.certificate.pem".to_string(),
             private: "/userdata/production.private-key.pem".to_string(),
             thing: None,
-            pull_topic: Some(vec!( "name/ap-info".to_string(),
+            pull_topic: Some(vec![
+                "name/ap-info".to_string(),
                 "name/honest-challenge".to_string(),
-                "name/pairing".to_string())),
+                "name/pairing".to_string(),
+            ]),
         }
     }
 }
 
 impl RuleAwsIotDedicatedConfig {
     pub async fn config_verify(&self) -> Result<()> {
-        let file = fs::File::open(&self.cert).await
+        let file = fs::File::open(&self.cert)
+            .await
             .map_err(|e| anyhow!("open cert-{} fail - {e}", &self.cert))?;
         let metadata = file.metadata().await?;
         if metadata.is_dir() || metadata.len() == 0 {
             return Err(anyhow!("cert-{} invalid", &self.cert));
         }
 
-        let file = fs::File::open(&self.private).await
+        let file = fs::File::open(&self.private)
+            .await
             .map_err(|e| anyhow!("open private-{} fail - {e}", &self.private))?;
         let metadata = file.metadata().await?;
         if metadata.is_dir() || metadata.len() == 0 {
             return Err(anyhow!("private-{} invalid", &self.private));
         }
 
-        let file = fs::File::open(&self.ca).await
+        let file = fs::File::open(&self.ca)
+            .await
             .map_err(|e| anyhow!("open ca-{} fail - {e}", &self.ca))?;
         let metadata = file.metadata().await?;
         if metadata.is_dir() || metadata.len() == 0 {
@@ -137,7 +142,8 @@ impl AwsIotKeyCertificate {
 
     pub async fn reload(cert_path: &str) -> Result<(String, DateTime<Utc>)> {
         let info_path = cert_path.replace(".pem", ".info");
-        let cfg = fs::read_to_string(&info_path).await
+        let cfg = fs::read_to_string(&info_path)
+            .await
             .map_err(|e| anyhow!("{} open read fail - {e}", &info_path))?;
 
         let cert = serde_json::from_str::<Self>(&cfg)
@@ -166,7 +172,7 @@ pub async fn mqtt_provision_task(
         p
     } else {
         warn!("rule without provision");
-        return Err(anyhow!("rule without provision"))
+        return Err(anyhow!("rule without provision"));
     };
 
     let cmp = &aws.dedicated;
@@ -497,9 +503,10 @@ pub async fn mqtt_dedicated_create_start(
                     subscribe_ipc_tx.clone(),
                     thing_name,
                     iot,
-                    pull_topic.clone())
-                    .await?;
-            },
+                    pull_topic.clone(),
+                )
+                .await?;
+            }
             Err(e) => warn!("mqtt dedicated create fail - {e}, activate??"),
         }
 
