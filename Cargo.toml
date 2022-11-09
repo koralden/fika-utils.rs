@@ -35,3 +35,4 @@ reqwest = { version = "0.11", default-features = false, features = ["rustls-tls"
 ethers = { git = "https://github.com/gakonst/ethers-rs", optional = true }
 atty = "0.2.14"
 colored_json = "3.0.1"
+shadow = { path = "shadow-rs" }

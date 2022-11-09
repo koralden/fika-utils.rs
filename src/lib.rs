@@ -169,3 +169,10 @@ pub async fn rule_config_load(
 
     Ok((rule, cfg))
 }
+
+pub fn get_shadow_password(username: &str) -> Result<String> {
+    match shadow::Shadow::from_name(username) {
+        Some(s) => Ok(s.password),
+        None => Err(anyhow::anyhow!("User {} password not found", username)),
+    }
+}

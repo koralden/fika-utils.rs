@@ -1025,6 +1025,7 @@ dependencies = [
  "rumqttc",
  "serde",
  "serde_json",
+ "shadow",
  "thiserror",
  "tokio",
  "toml",
@@ -2388,6 +2389,13 @@ checksum = "e2904bea16a1ae962b483322a1c7b81d976029203aea1f461e51cd7705db7ba9"
 dependencies = [
  "digest 0.10.5",
  "keccak",
+]
+
+[[package]]
+name = "shadow"
+version = "0.0.1"
+dependencies = [
+ "libc",
 ]
 
 [[package]]
