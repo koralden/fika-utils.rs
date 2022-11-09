@@ -3,10 +3,13 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use tokio::fs;
 use tokio::time::Duration;
-use {fastrand, std::iter::repeat_with};
 
-use crate::aws_iot::{RuleAwsIotDedicatedConfig, RuleAwsIotProvisionConfig};
 use crate::RuleConfigTask;
+#[cfg(feature = "aws")]
+use {
+    fastrand, std::iter::repeat_with,
+    crate::aws_iot::{RuleAwsIotDedicatedConfig, RuleAwsIotProvisionConfig},
+};
 
 #[derive(Deserialize, Serialize, Debug)]
 #[allow(dead_code)]
@@ -16,6 +19,7 @@ pub struct RuleConfig {
     pub subscribe: Option<Vec<RuleConfigSubscribe>>,
     pub task: Option<Vec<RuleConfigTask>>,
     pub honest: Option<RuleHonestConfig>,
+#[cfg(feature = "aws")]
     pub aws: RuleAwsIotConfig,
 }
 
@@ -23,6 +27,7 @@ impl RuleConfig {
     fn mirrow_default(mut self) -> Result<Self> {
         self.core.mirrow_default()?;
         self.boss.mirrow_default()?;
+#[cfg(feature = "aws")]
         self.aws.mirrow_default()?;
 
         Ok(self)
@@ -141,6 +146,7 @@ pub struct RuleHonestConfig {
     pub disable: Option<bool>,
 }
 
+#[cfg(feature = "aws")]
 #[derive(Deserialize, Serialize, Debug, Clone)]
 #[allow(dead_code)]
 pub struct RuleAwsIotConfig {
@@ -151,10 +157,13 @@ pub struct RuleAwsIotConfig {
     pub endpoint: Option<String>,
     pub port: Option<u32>,
 
+#[cfg(feature = "aws")]
     pub provision: Option<RuleAwsIotProvisionConfig>,
+#[cfg(feature = "aws")]
     pub dedicated: RuleAwsIotDedicatedConfig,
 }
 
+#[cfg(feature = "aws")]
 impl RuleAwsIotConfig {
     pub async fn config_verify(&self) -> Result<()> {
         if self.endpoint.is_none() {
@@ -209,6 +218,7 @@ impl RuleAwsIotConfig {
     }
 }
 
+#[cfg(feature = "aws")]
 impl Default for RuleAwsIotConfig {
     fn default() -> Self {
         Self {
@@ -220,7 +230,9 @@ impl Default for RuleAwsIotConfig {
             auth_token: Some("58280063f827ce322eaa37664ba5bf24".to_string()),
             device_path: Some("prod/api/v1/devices".to_string()),
 
+#[cfg(feature = "aws")]
             provision: None,
+#[cfg(feature = "aws")]
             dedicated: RuleAwsIotDedicatedConfig::default(),
         }
     }

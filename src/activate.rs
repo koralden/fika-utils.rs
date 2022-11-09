@@ -6,16 +6,22 @@ use serde::{Deserialize, Serialize};
 use tokio::fs;
 use tokio::process::Command;
 use tokio::signal;
-use tracing::{debug, instrument, warn};
+use tracing::{debug, warn};
+//use tracing::instrument;
 //use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use atty::Stream;
 use chrono::prelude::*;
 use colored_json::to_colored_json_auto;
 
-use crate::aws_iot::{mqtt_provision_task, AwsIotKeyCertificate};
+#[cfg(feature = "aws")]
+use crate::{
+    rule_config_load,
+    aws_iot::{mqtt_provision_task, AwsIotKeyCertificate
+    },
+};
 use crate::kap_daemon::KCoreConfig;
 use crate::kap_daemon::{KBossConfig, KNetworkConfig, KPorConfig};
-use crate::{rule_config_load, setup_logging};
+use crate::setup_logging;
 
 //type DbConnection = redis::aio::Connection;
 
@@ -283,7 +289,17 @@ struct ActivateCertificate {
     issue_time: DateTime<Utc>,
 }
 
-#[instrument(name = "fleet-provision")]
+#[cfg(not(feature = "aws"))]
+async fn iot_fleet_provision(
+    _rule_path: &str,
+    _config_path: &str,
+    _force: bool,
+) -> Result<ActivateCertificate> {
+    Err(anyhow!("not support due aws feature disable"))
+}
+
+#[cfg(feature = "aws")]
+//#[instrument(name = "fleet-provision")]
 async fn iot_fleet_provision(
     rule_path: &str,
     config_path: &str,

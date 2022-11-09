@@ -9,6 +9,7 @@ edition = "2021"
 default = ["boss-api"]
 boss-api = ["reqwest"]
 wallet = ["ethers"]
+aws = ["aws-iot-device-sdk-rust", "rumqttc", "mqtt4bytes", "fastrand" ]
 
 [dependencies]
 anyhow = "1.0.58"
@@ -16,12 +17,12 @@ async-trait = "0.1.56"
 bytes = "1.1.0"
 chrono = { version = "0.4.22", features = ["serde"] }
 clap = { version = "^3.2.5", features = ["derive"] }
-fastrand = "1.7.0"
+fastrand = { version = "1.7.0", optional = true }
 futures-util = "0.3.21"
-mqtt4bytes = "0.4.0"
 process-stream = "0.2.3"
 redis = { version = "0.21.5", features = ["tokio-comp"] }
-rumqttc = "0.15.0"
+rumqttc = { version = "0.15.0", optional = true }
+mqtt4bytes = { version = "0.4.0", optional = true }
 serde = { version = "1.0.137", features = ["derive"] }
 serde_json = "1.0.81"
 thiserror = "1.0.31"
@@ -30,8 +31,8 @@ toml = "0.5.9"
 tracing = "0.1.35"
 tracing-futures = "0.2.5"
 tracing-subscriber = { version = "0.3.11", features = ["env-filter"] }
-aws-iot-device-sdk-rust = { path = "aws-iot-device-sdk-rust" }
-reqwest = { version = "0.11", default-features = false, features = ["rustls-tls", "json"], optional = true }
+aws-iot-device-sdk-rust = { path = "aws-iot-device-sdk-rust", optional = true }
+reqwest = { version = "0.11", default-features = false, features = ["rustls-tls", "json", "trust-dns"], optional = true }
 ethers = { git = "https://github.com/gakonst/ethers-rs", optional = true }
 atty = "0.2.14"
 colored_json = "3.0.1"

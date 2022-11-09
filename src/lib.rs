@@ -9,6 +9,7 @@ use tracing::{debug, instrument};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 pub mod activate;
+#[cfg(feature = "aws")]
 pub mod aws_iot;
 pub mod kap_daemon;
 pub use self::activate::{activate, ActivateOpt};
