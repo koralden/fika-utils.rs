@@ -1,6 +1,7 @@
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 use tokio::fs;
+use tracing::warn;
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 #[allow(dead_code)]
@@ -60,14 +61,16 @@ pub struct KBossConfig {
 impl KBossConfig {
     pub async fn config_verify(&self) -> Result<()> {
         if self.access_token.is_none() {
-            return Err(anyhow!("access-token invalid"));
+            //return Err(anyhow!("access-token invalid"));
+            warn!("access-token invalid");
         }
 
         if self.ap_access_token.is_none() {
-            Err(anyhow!("ap-access-token invalid"))
-        } else {
-            Ok(())
+            //Err(anyhow!("ap-access-token invalid"))
+            warn!("ap-access-token invalid");
         }
+
+        Ok(())
     }
 }
 
