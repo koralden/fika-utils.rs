@@ -403,7 +403,7 @@ pub async fn boss_web_api(
                     },
                     CurlKV {
                         key: "ACCESSTOKEN-AP".to_string(),
-                        value: token.unwrap(),
+                        value: token.expect("ACCESSTOKEN-AP none invalid"),
                     },
                 ]),
                 query: Some(vec![CurlKV {
@@ -449,7 +449,7 @@ pub async fn boss_web_api(
                     },
                     CurlKV {
                         key: "ACCESSTOKEN-AP".to_string(),
-                        value: token.unwrap(),
+                        value: token.expect("ACCESSTOKEN-AP none invalid"),
                     },
                 ]),
                 query: Some(vec![CurlKV {
@@ -495,7 +495,7 @@ pub async fn boss_web_api(
                     },
                     CurlKV {
                         key: "ACCESSTOKEN-AP".to_string(),
-                        value: token.unwrap(),
+                        value: token.expect("ACCESSTOKEN-AP none invalid"),
                     },
                 ]),
                 query: Some(vec![CurlKV {
@@ -543,7 +543,7 @@ pub async fn boss_web_api(
                     },
                     CurlKV {
                         key: "ACCESSTOKEN-AP".to_string(),
-                        value: token.unwrap(),
+                        value: token.expect("ACCESSTOKEN-AP none invalid"),
                     },
                 ]),
                 query: None,
@@ -606,13 +606,13 @@ pub async fn boss_web_cli(opt: WebBossOpt) -> Result<()> {
     let root_url = if let Some(root) = opt.root {
         root
     } else {
-        rule.boss.root_url.unwrap()
+        rule.boss.root_url.expect("boss/root-url none invalid")
     };
 
     let region = if let Some(region) = opt.access_region {
         region
     } else {
-        boss.access_token.unwrap()
+        boss.access_token.expect("boss/access-token none invalid")
     };
 
     let token = if let Some(token) = opt.access_token {
@@ -713,7 +713,9 @@ pub async fn aws_web_api(root_url: &str, auth_token: &str, class: WebAwsPath) ->
             .await?
             {
                 CurlResponse::JsonFmt(response) => {
-                    let response: AwsDeviceList = serde_json::from_value(response).unwrap();
+                    let response: AwsDeviceList =
+                        serde_json::from_value(response)
+                        .expect("serde json from {response} fail");
                     let show = if let Some(ref wallet) = state.wallet {
                         let got = response
                             .data
@@ -749,7 +751,7 @@ pub async fn aws_web_cli(opt: WebAwsOpt) -> Result<()> {
     let root_url = if let Some(root) = opt.root_url {
         root
     } else {
-        rule.aws.root_url.unwrap()
+        rule.aws.root_url.expect("aws/root-url none invalid")
     };
     let auth_token = if let Some(token) = opt.auth_token {
         token
