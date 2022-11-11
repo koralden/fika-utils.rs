@@ -9,7 +9,7 @@ use tracing::{debug, instrument};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 pub mod activate;
-#[cfg(feature = "aws")]
+#[cfg(feature = "aws-iot")]
 pub mod aws_iot;
 pub mod kap_daemon;
 pub use self::activate::{activate, ActivateOpt};
@@ -20,9 +20,9 @@ pub mod web_api;
 pub use self::misc::{time_tools, TimeToolOpt};
 #[cfg(feature = "ethers")]
 pub use self::misc::{wallet_tools, WalletCommand};
-pub use self::web_api::{
-    aws_web_cli, boss_web_cli, curl_web_cli, CurlMethod, WebAwsOpt, WebBossOpt,
-};
+#[cfg(feature = "aws-cli")]
+pub use self::web_api::aws_web_cli;
+pub use self::web_api::{boss_web_cli, curl_web_cli, CurlMethod, WebAwsOpt, WebBossOpt};
 pub mod kap_rule;
 
 #[derive(Debug)]

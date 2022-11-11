@@ -10,6 +10,7 @@ use thiserror::Error;
 use tracing::error;
 
 use crate::rule_config_load;
+#[cfg(feature = "aws-cli")]
 use crate::setup_logging;
 
 #[derive(Error, Debug)]
@@ -611,7 +612,7 @@ pub async fn boss_web_cli(opt: WebBossOpt) -> Result<()> {
     let region = if let Some(region) = opt.access_region {
         region
     } else {
-        rule.boss.access_token.unwrap()
+        boss.access_token.unwrap()
     };
 
     let token = if let Some(token) = opt.access_token {
@@ -663,19 +664,18 @@ pub struct WebAwsOpt {
     #[clap(long = "log-level", default_value = "info")]
     log_level: String,
 
-    #[clap(
-        short = 'u',
-        long = "root-url",
-        default_value = "https://i76cqmiru3.execute-api.ap-northeast-1.amazonaws.com"
-    )]
-    root_url: String,
+    #[clap(short = 'u', long = "root-url")]
+    root_url: Option<String>,
+
+    #[clap(short = 'a', long = "auth-token")]
+    auth_token: Option<String>,
 
     #[clap(
-        short = 'a',
-        long = "auth-token",
-        default_value = "58280063f827ce322eaa37664ba5bf24"
+        short = 'r',
+        long = "rule",
+        default_value = "/etc/fika_manager/rule.toml"
     )]
-    auth_token: String,
+    rule: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -690,6 +690,7 @@ struct AwsDeviceList {
     data: Vec<AwsDeviceEntry>,
 }
 
+#[cfg(feature = "aws-cli")]
 pub async fn aws_web_api(root_url: &str, auth_token: &str, class: WebAwsPath) -> Result<()> {
     match class {
         WebAwsPath::GetDevice(state) => {
@@ -739,10 +740,27 @@ pub async fn aws_web_api(root_url: &str, auth_token: &str, class: WebAwsPath) ->
     Ok(())
 }
 
+#[cfg(feature = "aws-cli")]
 pub async fn aws_web_cli(opt: WebAwsOpt) -> Result<()> {
     setup_logging(&opt.log_level)?;
 
-    aws_web_api(&opt.root_url, &opt.auth_token, opt.class).await
+    let (rule, cfg) = rule_config_load(&opt.rule, None).await?;
+
+    let root_url = if let Some(root) = opt.root_url {
+        root
+    } else {
+        rule.aws.root_url.unwrap()
+    };
+    let auth_token = if let Some(token) = opt.auth_token {
+        token
+    } else {
+        cfg.aws
+            .expect("aws section nonexist")
+            .auth_token
+            .expect("auth-token nonexist")
+    };
+
+    aws_web_api(&root_url, &auth_token, opt.class).await
 }
 
 pub fn web_full_url(url: &str, path: &str, query: &Vec<(&str, &str)>) -> Result<String> {

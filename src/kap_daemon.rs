@@ -9,6 +9,7 @@ pub struct KdaemonConfig {
     pub network: KNetworkConfig,
     pub por: KPorConfig,
     pub boss: KBossConfig,
+    pub aws: Option<KAwsConfig>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq)]
@@ -52,11 +53,16 @@ pub struct KPorConfig {
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 #[allow(dead_code)]
 pub struct KBossConfig {
+    pub access_token: Option<String>,
     pub ap_access_token: Option<String>,
 }
 
 impl KBossConfig {
     pub async fn config_verify(&self) -> Result<()> {
+        if self.access_token.is_none() {
+            return Err(anyhow!("access-token invalid"));
+        }
+
         if self.ap_access_token.is_none() {
             Err(anyhow!("ap-access-token invalid"))
         } else {
@@ -75,4 +81,9 @@ impl KdaemonConfig {
         self.core.config_verify().await?;
         self.boss.config_verify().await
     }
+}
+
+#[derive(Serialize, Deserialize, Debug, Default, Clone)]
+pub struct KAwsConfig {
+    pub auth_token: Option<String>,
 }

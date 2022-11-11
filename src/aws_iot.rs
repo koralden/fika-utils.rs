@@ -67,11 +67,7 @@ impl Default for RuleAwsIotDedicatedConfig {
             cert: "/userdata/production.certificate.pem".to_string(),
             private: "/userdata/production.private-key.pem".to_string(),
             thing: None,
-            pull_topic: Some(vec![
-                "name/ap-info".to_string(),
-                "name/honest-challenge".to_string(),
-                "name/pairing".to_string(),
-            ]),
+            pull_topic: None,
         }
     }
 }

@@ -9,7 +9,8 @@ edition = "2021"
 default = ["boss-api"]
 boss-api = ["reqwest"]
 wallet = ["ethers"]
-aws = ["aws-iot-device-sdk-rust", "rumqttc", "mqtt4bytes", "fastrand" ]
+aws-iot = ["aws-iot-device-sdk-rust", "rumqttc", "mqtt4bytes", "fastrand" ]
+aws-cli = []
 
 [dependencies]
 anyhow = "1.0.58"

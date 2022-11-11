@@ -13,15 +13,14 @@ use atty::Stream;
 use chrono::prelude::*;
 use colored_json::to_colored_json_auto;
 
-#[cfg(feature = "aws")]
-use crate::{
-    rule_config_load,
-    aws_iot::{mqtt_provision_task, AwsIotKeyCertificate
-    },
-};
 use crate::kap_daemon::KCoreConfig;
 use crate::kap_daemon::{KBossConfig, KNetworkConfig, KPorConfig};
 use crate::setup_logging;
+#[cfg(feature = "aws-iot")]
+use crate::{
+    aws_iot::{mqtt_provision_task, AwsIotKeyCertificate},
+    rule_config_load,
+};
 
 //type DbConnection = redis::aio::Connection;
 
@@ -289,7 +288,7 @@ struct ActivateCertificate {
     issue_time: DateTime<Utc>,
 }
 
-#[cfg(not(feature = "aws"))]
+#[cfg(not(feature = "aws-iot"))]
 async fn iot_fleet_provision(
     _rule_path: &str,
     _config_path: &str,
@@ -298,7 +297,7 @@ async fn iot_fleet_provision(
     Err(anyhow!("not support due aws feature disable"))
 }
 
-#[cfg(feature = "aws")]
+#[cfg(feature = "aws-iot")]
 //#[instrument(name = "fleet-provision")]
 async fn iot_fleet_provision(
     rule_path: &str,
